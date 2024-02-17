@@ -1,0 +1,4 @@
+slob
+*.o
+compile_commands.json
+.cache/
