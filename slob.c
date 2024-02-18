@@ -64,7 +64,7 @@ void *slob_malloc(uint64_t owner, size_t size) {
 		}
 
 		memmove(blocks + i + 1, blocks + i + 2,
-				sizeof(block) * (blocks_len - i));
+				sizeof(slob_block) * (blocks_len - i - 1));
 		blocks_len += 1;
 
 		slob_block taken_block = {
@@ -97,6 +97,43 @@ void slob_free(uint64_t owner, void *ptr) {
 	/* ptr is binary searchable */
 	for (size_t i = 0; i < blocks_len; ++i) {
 		if (blocks[i].owner == owner && blocks[i].ptr == ptr) {
+			/* Merge right and left blocks */
+			if (i > 0 && i < SLOB_MAX_BLOCKS &&
+				blocks[i - 1].owner == SLOB_BLOCK_OWNER_FREE &&
+				blocks[i + 1].owner == SLOB_BLOCK_OWNER_FREE) {
+				/* Merge left and right blocks */
+				blocks[i - 1].size += blocks[i].size + blocks[i + 1].size;
+
+				memmove(blocks + i + 2, blocks + i,
+						sizeof(slob_block) * (blocks_len - i - 2));
+				blocks_len -= 2;
+
+				return;
+			}
+
+			if (i > 0 && blocks[i - 1].owner == SLOB_BLOCK_OWNER_FREE) {
+				/* Merge left block */
+				blocks[i - 1].size += blocks[i].size;
+
+				memmove(blocks + i + 1, blocks + i,
+						sizeof(slob_block) * (blocks_len - i - 1));
+				blocks_len -= 1;
+
+				return;
+			}
+
+			if (i < SLOB_MAX_BLOCKS &&
+				blocks[i + 1].owner == SLOB_BLOCK_OWNER_FREE) {
+				/* Merge right block */
+				blocks[i].size += blocks[i + 1].size;
+
+				memmove(blocks + i + 2, blocks + i + 1,
+						sizeof(slob_block) * (blocks_len - i - 1));
+				blocks_len -= 1;
+
+				return;
+			}
+
 			blocks[i].owner = SLOB_BLOCK_OWNER_FREE;
 			return;
 		}
