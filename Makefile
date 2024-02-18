@@ -1,5 +1,5 @@
 CC := clang
-CFLAGS := -std=gnu2x -O3 -Weverything -Werror
+CFLAGS := -std=gnu2x -O3 -Weverything -Wno-declaration-after-statement -Werror
 
 SRCS := $(shell find . -type f -name '*.c')
 OBJS := $(patsubst %.c,%.o,$(SRCS))
