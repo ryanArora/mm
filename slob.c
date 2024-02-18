@@ -125,6 +125,7 @@ void slob_free(uint64_t owner, void *ptr) {
 			if (i < SLOB_MAX_BLOCKS &&
 				blocks[i + 1].owner == SLOB_BLOCK_OWNER_FREE) {
 				/* Merge right block */
+				blocks[i].owner = SLOB_BLOCK_OWNER_FREE;
 				blocks[i].size += blocks[i + 1].size;
 
 				memmove(blocks + i + 2, blocks + i + 1,
@@ -134,6 +135,7 @@ void slob_free(uint64_t owner, void *ptr) {
 				return;
 			}
 
+			/* Merge no blocks */
 			blocks[i].owner = SLOB_BLOCK_OWNER_FREE;
 			return;
 		}
